@@ -1,0 +1,122 @@
+---
+title: "webscraping en amazon"
+author: "Anthony J. Servita R."
+date: "12/12/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+1.- conocimiento del problema.
+  Se realizara una extraccion de datos (webscraping) sobre la pagina web de amazon, se hara una revision de los porductos computacionales que posee amazon en venta. se extraeran los modelos, las marcas asi como su precio y fecha de publicacion. 
+  
+importacion de paquetes para la extraccion de datos.
+```{r webscraping}
+library(rvest)
+library(robotstxt)
+library(selectr)
+library(xml2)
+library(tidyverse)
+library(lubridate)
+library(dplyr)
+library(skimr)
+library(tidyr)
+library(readxl)
+```
+
+2.- Extraccion de datos. El webscraping se realizara por medio del paquete rvest.
+```{r}
+# vecto de caracter que contiene el template de amazon a la cual estoy accediendo
+url <- c("https://www.amazon.com/-/es/s?i=computers-intl-ship&bbn=16225007011&rh=n%3A16225007011%2Cn%3A13896617011%2Cn%3A565098&dc&language=es&qid=1607804959&rnid=2057412011&ref=sr_nr_p_n_feature_fourteen_browse-bin_2")
+
+#asistencia del robots.txt para ver si esta disponible la extraccion de datos legalmente
+paths_allowed(paths = url)
+```
+Dado que el valor del robot.txt nos arrojo un TRUE, extrearemos los datos que queremos de la pagina objetivo.
+
+```{r}
+#instancia que responde a la extraccion del code HTML de la pagina objetivo.
+pagina_web <- read_html(url)
+
+# vector de la clase css que situa el nombre del producto.
+css_producto <- c(".s-line-clamp-2")
+
+# se extrae en CODE HTML que contiene el nombre del producto
+producto_html <- html_nodes(pagina_web, css_producto)
+
+# Extreccion de nombre del producto
+producto_texto <- html_text(producto_html)
+
+# limpieza de cadenas de texto sobre los productos
+producto_texto <- gsub("\n", "", producto_texto)
+producto_texto <- gsub(" ", "", producto_texto)
+
+nombre_col <- c("PC_producto",
+                "procesador",
+                "discoduro",
+                "RAM",
+                "artefactos",
+                "tarjetaswifi")
+producto_texto <- read_delim(producto_texto, 
+                             ",", col_names = F)
+
+head(producto_texto)
+colnames(producto_texto) <- nombre_col
+head(producto_texto)
+
+#obtenemos los precios
+css_precio <- c(".a-price-whole")
+precio_html <- html_nodes(pagina_web, css_precio)
+precio_texto <- html_text(precio_html)
+
+#limpieza de las cadenas de precio
+precio_texto <- gsub(",", "", precio_texto)
+precio_texto <- gsub(".", "", precio_texto)
+
+#visualizacion de los precios
+head(precio_texto)
+```
+
+3.- Transformacion de variables
+```{r}
+precio_real <- as.numeric(precio_texto)
+head(precio_real)
+
+# Dataframe con las variables extraidas
+df <- data.frame(PC_producto = producto_texto[, 1],
+                 procesador = producto_texto[, 2],
+                 disco_duro = producto_texto[, 3],
+                 RAM = producto_texto[, 4], 
+                 atefactos = producto_texto[, 5],
+                 tarjetaswifi = producto_texto[, 6],
+                 precio = precio_real)
+df
+write.csv(df, file = "tabla de datos-WS-PC.csv")
+```
+luego de realizar dla extraccion de datos y arreglarlos, se importaran estos datos para realizar un analisis descriptivo.
+
+4.- importacion de newdata.
+```{r}
+library(readr)
+tabla_de_datos_WS_PC <- read_delim("tabla de datos-WS-PC.csv", 
+    ";", escape_double = FALSE, na = "0", 
+    trim_ws = TRUE)
+head(tabla_de_datos_WS_PC)
+```
+
+5.- conocimiento de los datos. 
+  Los datos que se han importado, estan contenidos en una tabal de 16 x 7 los cuales contienen valores para las 5 variables cualitativas y 1 variable cuantitativa.
+```{r}
+df <- tabla_de_datos_WS_PC
+glimpse(df)
+```
+
+
+
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
