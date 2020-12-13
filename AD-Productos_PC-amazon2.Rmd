@@ -2,14 +2,11 @@
 title: "webscraping en amazon"
 author: "Anthony J. Servita R."
 date: "12/12/2020"
-output:
-  pdf_document: default
-  html_document:
-    df_print: paged
+output: pdf_document
 ---
 
 ```{r, echo=FALSE}
-knitr::opts_chunk$set(error = TRUE)
+knitr::opts_chunk$set(echo = TRUE)
 ```
 1.- conocimiento del problema.
   Se realizara una extraccion de datos (webscraping) sobre la pagina web de amazon, se hara una revision de los porductos computacionales que posee amazon en venta. se extraeran los modelos, las marcas asi como su precio y fecha de publicacion. 
